@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ✅ Allow anyone to create signup requests
+    match /signup_requests/{docId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+    // ✅ Allow authenticated users to read bookings
+    match /bookings/{docId} {
+      allow read: if request.auth != null;
+
+      // Allow authenticated users to create bookings if they set status to "pending"
+      allow create: if request.auth != null
+                    && request.resource.data.status == "pending";
+
+      // Prevent updates or deletes by clients
+      allow update, delete: if false;
+    }
+
+    // ❌ Lock down everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

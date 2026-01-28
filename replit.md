@@ -47,3 +47,6 @@ The app uses Firebase for:
 - Improved error messages to be user-friendly
 - Added keyboard navigation to photo gallery
 - Cleaned up unused files
+- Calendar now fits viewport without scrolling (flexbox layout)
+- Navigation controls (prev/next/today) moved to footer below calendar
+- Photos and Address buttons styled with gradient for prominence

@@ -4,13 +4,13 @@
 A static website for managing beach house bookings with Firebase authentication and Firestore database integration. Features a modern, clean design with smooth user experience.
 
 ## Project Structure
-- `Bellagio Marrone/public/` - Main website files served to users
-  - `index.html` - Login page with Firebase authentication
-  - `calendar.html` - Booking calendar with FullCalendar integration
-  - `backgroundimage.jpg` - Background image
-  - `404.html` - Error page
-- `Bellagio Marrone/functions/` - Firebase Cloud Functions (deployed to Firebase, not run locally)
-- `Bellagio Marrone/firebase.json` - Firebase hosting configuration
+- `index.html` - Login page with Firebase authentication
+- `calendar.html` - Booking calendar with FullCalendar integration
+- `backgroundimage.jpg` - Background image
+- `404.html` - Error page
+- `functions/` - Firebase Cloud Functions (deployed to Firebase, not run locally)
+- `firebase.json` - Firebase hosting configuration
+- `photo1-6.jpg`, `HouseMap1-2.webp` - Gallery images
 
 ## Technology Stack
 - Static HTML/CSS/JavaScript
@@ -22,7 +22,7 @@ A static website for managing beach house bookings with Firebase authentication 
 ## Running Locally
 The site is served using `npx serve` on port 5000:
 ```
-npx serve "Bellagio Marrone/public" -l 5000
+npx serve . -l 5000
 ```
 
 ## Firebase Configuration

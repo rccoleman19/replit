@@ -123,6 +123,11 @@
     .fc .fc-header-toolbar {
       margin-bottom: 8px !important;
     }
+    .fc .fc-toolbar-chunk {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .fc .fc-daygrid-day:hover {
       background: #f0f9ff;
       cursor: pointer;
@@ -568,9 +573,9 @@
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         headerToolbar: {
-          left: 'title',
+          left: 'title addressButton photosButton',
           center: '',
-          right: 'addressButton photosButton'
+          right: ''
         },
         footerToolbar: {
           left: '',

@@ -90,6 +90,23 @@
       background: #0ea5e9;
       color: white;
     }
+    .fc .fc-addressButton-button,
+    .fc .fc-photosButton-button {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+    }
+    .fc .fc-addressButton-button:hover,
+    .fc .fc-photosButton-button:hover {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      transform: translateY(-1px);
+    }
+    .fc .fc-footer-toolbar {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #e2e8f0;
+    }
     .fc .fc-daygrid-day:hover {
       background: #f0f9ff;
       cursor: pointer;
@@ -535,9 +552,14 @@
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
         headerToolbar: {
-          left: 'prev,next today',
+          left: 'addressButton photosButton',
           center: 'title',
-          right: 'addressButton photosButton'
+          right: ''
+        },
+        footerToolbar: {
+          left: '',
+          center: 'prev today next',
+          right: ''
         },
         customButtons: {
           addressButton: {

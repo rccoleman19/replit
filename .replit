@@ -21,13 +21,13 @@ args = "Website"
 name = "Website"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx serve \"Bellagio Marrone/public\" -l 5000"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx serve . -l 5000"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000

@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beach House Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: url('backgroundimage.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #calendar-container {
+      max-width: 960px;
+      margin: 4px auto;
+      padding: 8px 12px;
+      height: calc(100vh - 8px);
+      display: flex;
+      flex-direction: column;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      animation: fadeIn 0.4s ease-out;
+      overflow: hidden;
+    }
+    #calendar {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+    #calendar .fc {
+      height: 100%;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .header-bar h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a1a2e;
+    }
+    #logout {
+      display: inline-block;
+      padding: 5px 12px;
+      text-align: center;
+      background: #ef4444;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+    #logout:hover {
+      background: #dc2626;
+    }
+    
+    .fc {
+      font-family: inherit;
+    }
+    .fc .fc-toolbar-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a1a2e;
+    }
+    .fc .fc-button {
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .fc .fc-button:hover {
+      background: #e2e8f0;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+      background: #0ea5e9;
+      color: white;
+    }
+    .fc .fc-addressButton-button,
+    .fc .fc-photosButton-button {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+    }
+    .fc .fc-addressButton-button:hover,
+    .fc .fc-photosButton-button:hover {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      transform: translateY(-1px);
+    }
+    .fc .fc-footer-toolbar {
+      margin-top: 2px;
+      padding-top: 2px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .fc .fc-header-toolbar {
+      margin-bottom: 4px !important;
+    }
+    .fc .fc-toolbar-chunk {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .fc .fc-daygrid-day:hover {
+      background: #f0f9ff;
+      cursor: pointer;
+    }
+    .fc .fc-daygrid-day-number {
+      font-weight: 500;
+      color: #475569;
+    }
+    .fc-event {
+      border: none;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-weight: 500;
+    }
+    .fc-event-title {
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+    .shadow-black .fc-event-title { text-shadow: 0 0 3px rgba(0,0,0,0.5); }
+    .shadow-white .fc-event-title { text-shadow: 0 0 3px rgba(255,255,255,0.8); }
+
+    #overlayBackground {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .modal-panel {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 28px;
+      border-radius: 20px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      width: 90%;
+      max-width: 400px;
+      animation: modalSlide 0.3s ease;
+    }
+    @keyframes modalSlide {
+      from { opacity: 0; transform: translate(-50%, -48%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    .modal-panel h3 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a2e;
+      text-align: center;
+    }
+    .modal-panel .close-btn {
+      position: absolute;
+      top: 16px; right: 20px;
+      font-size: 24px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: color 0.2s;
+      background: none;
+      border: none;
+    }
+    .modal-panel .close-btn:hover {
+      color: #1a1a2e;
+    }
+
+    #bookingForm {
+      z-index: 1000;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+    }
+    .cost-display {
+      text-align: center;
+      background: #f0f9ff;
+      padding: 14px;
+      border-radius: 10px;
+      margin: 16px 0;
+      font-weight: 600;
+      color: #0284c7;
+      font-size: 16px;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+
+    #addressPanel {
+      z-index: 1002;
+      max-width: 520px;
+    }
+    .addr-content p {
+      text-align: center;
+      color: #64748b;
+      margin: 0 0 16px 0;
+    }
+    .addr-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .addr-links a {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      text-decoration: none;
+      color: #1a1a2e;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .addr-links a:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+    .map-embed {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      height: 240px;
+    }
+    #mapFrame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    #photoModal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background-color: rgba(0, 0, 0, 0.95);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: fadeIn 0.2s ease;
+    }
+    .gallery-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 85vh;
+      text-align: center;
+    }
+    .gallery-content img {
+      max-width: 100%;
+      max-height: 75vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .gallery-controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+    .gallery-controls button {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      backdrop-filter: blur(10px);
+    }
+    .gallery-controls button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+    }
+    .gallery-close {
+      position: absolute;
+      top: 30px; right: 40px;
+      font-size: 36px;
+      color: white;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+      background: none;
+      border: none;
+    }
+    .gallery-close:hover {
+      opacity: 1;
+    }
+    .gallery-counter {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1a1a2e;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 500;
+      font-size: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 2000;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.success {
+      background: #16a34a;
+    }
+    .toast.error {
+      background: #dc2626;
+    }
+
+    @media (max-width: 600px) {
+      #calendar-container {
+        padding: 16px;
+        margin: 10px;
+      }
+      .header-bar {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+      }
+      .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal-panel {
+        width: 95%;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="overlayBackground" onclick="closeAllModals()"></div>
+
+  <div id="photoModal">
+    <button class="gallery-close" onclick="closeGallery()">&times;</button>
+    <div class="gallery-content">
+      <img id="galleryImg" src="" alt="House photo" />
+      <div class="gallery-controls">
+        <button onclick="prevImage()">&#8592; Previous</button>
+        <button onclick="nextImage()">Next &#8594;</button>
+      </div>
+      <div class="gallery-counter" id="photoCounter"></div>
+    </div>
+  </div>
+
+  <div id="addressPanel" class="modal-panel">
+    <button class="close-btn" onclick="closeAddressPanel()">&times;</button>
+    <h3>Beach House Address</h3>
+    <div class="addr-content">
+      <p id="addressText"></p>
+      <div class="addr-links">
+        <a id="appleMapsLink" target="_blank" rel="noopener">Apple Maps</a>
+        <a id="googleMapsLink" target="_blank" rel="noopener">Google Maps</a>
+        <a id="wazeLink" target="_blank" rel="noopener">Waze</a>
+      </div>
+      <div class="map-embed">
+        <iframe id="mapFrame" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="bookingForm" class="modal-panel">
+    <button class="close-btn" onclick="closeForm()">&times;</button>
+    <h3>Request Booking</h3>
+    <div class="form-group">
+      <label for="arrivalInput">Arrival Date</label>
+      <input id="arrivalInput" type="date" required>
+    </div>
+    <div class="form-group">
+      <label for="departureInput">Departure Date</label>
+      <input id="departureInput" type="date" required>
+    </div>
+    <div class="cost-display" id="estimatedCost"></div>
+    <button class="btn btn-primary" id="submitBtn" onclick="submitBooking()">Submit Request</button>
+    <button class="btn btn-secondary" onclick="closeForm()">Cancel</button>
+  </div>
+
+  <div id="calendar-container">
+    <div class="header-bar">
+      <h1>Beach House Calendar</h1>
+      <a href="#" id="logout" onclick="logout(); return false;">Sign Out</a>
+    </div>
+    <div id="calendar"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiZafQYL0jm0mGL-aWlN1Bt6gQ0ifXwoM",
+      authDomain: "bellagio-marrone.firebaseapp.com",
+      projectId: "bellagio-marrone",
+      storageBucket: "bellagio-marrone.appspot.com",
+      messagingSenderId: "954154601522",
+      appId: "1:954154601522:web:fee9d120c4e42c540e802b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let calendar, bookedDates = [];
+
+    const HOUSE_ADDRESS = "43 Golf Villa Dr., Santa Rosa Beach, FL 32459";
+    const HOUSE_COORDS = { lat: 30.3749, lng: -86.1616 };
+
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.className = "toast " + type + " visible";
+      setTimeout(() => {
+        toast.classList.remove("visible");
+      }, 3500);
+    }
+
+    function encode(u) { return encodeURIComponent(u); }
+
+    function buildDirectionsLinks() {
+      const apple = `https://maps.apple.com/?daddr=${encode(HOUSE_ADDRESS)}`;
+      const google = `https://www.google.com/maps/dir/?api=1&destination=${encode(HOUSE_ADDRESS)}`;
+      const waze = (HOUSE_COORDS && typeof HOUSE_COORDS.lat === "number")
+        ? `https://www.waze.com/ul?ll=${HOUSE_COORDS.lat}%2C${HOUSE_COORDS.lng}&navigate=yes`
+        : `https://www.waze.com/ul?q=${encode(HOUSE_ADDRESS)}&navigate=yes`;
+      return { apple, google, waze };
+    }
+
+    function openAddressPanel() {
+      document.getElementById("addressText").textContent = HOUSE_ADDRESS;
+      const links = buildDirectionsLinks();
+      document.getElementById("appleMapsLink").href = links.apple;
+      document.getElementById("googleMapsLink").href = links.google;
+      document.getElementById("wazeLink").href = links.waze;
+
+      const gEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(HOUSE_ADDRESS)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+      document.getElementById("mapFrame").src = gEmbed;
+
+      document.getElementById('overlayBackground').style.display = 'block';
+      document.getElementById('addressPanel').style.display = 'block';
+    }
+
+    function closeAddressPanel() {
+      document.getElementById('addressPanel').style.display = 'none';
+      document.getElementById('overlayBackground').style.display = 'none';
+      document.getElementById("mapFrame").src = "";
+    }
+
+    function closeAllModals() {
+      closeAddressPanel();
+      closeForm();
+    }
+
+    function logout() {
+      auth.signOut().then(() => window.location.href = "index.html");
+    }
+
+    function getContrastTextColor(hexColor) {
+      const r = parseInt(hexColor.substr(1, 2), 16);
+      const g = parseInt(hexColor.substr(3, 2), 16);
+      const b = parseInt(hexColor.substr(5, 2), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 125 ? '#000' : '#fff';
+    }
+
+    function normalizeDateOnly(dateStr) {
+      const d = (dateStr instanceof Date) ? new Date(dateStr) : new Date(dateStr + "T00:00:00");
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+      return aStart < bEnd && aEnd > bStart;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: '',
+          center: 'addressButton title photosButton',
+          right: ''
+        },
+        footerToolbar: {
+          left: '',
+          center: 'prev today next',
+          right: ''
+        },
+        customButtons: {
+          addressButton: {
+            text: 'Address',
+            click: function() { openAddressPanel(); }
+          },
+          photosButton: {
+            text: 'Photos',
+            click: function() { openGallery(); }
+          }
+        },
+        height: '100%',
+        dateClick: handleDateClick
+      });
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          const snapshot = await db.collection("bookings").where("status", "==", "approved").get();
+          const events = [];
+
+          for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const email = data.email || "";
+
+            let userName = (data.name && data.name !== "N/A") ? data.name : "";
+            if (!userName && email) {
+              try {
+                const userSnapshot = await db.collection("users").where("email", "==", email).limit(1).get();
+                if (!userSnapshot.empty) userName = userSnapshot.docs[0].data().name || "";
+              } catch (e) { console.error("Failed to fetch name for", email, e); }
+            }
+            if (!userName) userName = email || "Booking";
+
+            if (data['arrive date'] && data['leave date']) {
+              bookedDates.push({ start: data['arrive date'], end: data['leave date'] });
+            }
+
+            const color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            const textColor = getContrastTextColor(color);
+            const shadowClass = textColor === "#000" ? "shadow-white" : "shadow-black";
+
+            events.push({
+              title: userName,
+              start: data['arrive date'],
+              end: data['leave date'],
+              backgroundColor: color,
+              textColor: textColor,
+              allDay: true,
+              classNames: [shadowClass],
+            });
+          }
+
+          calendar.addEventSource(events);
+          calendar.render();
+
+        } catch (error) {
+          console.error("Error loading bookings:", error);
+          showToast("Could not load bookings. Please refresh.", "error");
+        }
+      });
+    });
+
+    function handleDateClick(info) {
+      const clickedDate = info.dateStr;
+      const isBooked = bookedDates.some(range =>
+        clickedDate >= range.start && clickedDate < range.end
+      );
+
+      if (!isBooked) {
+        const arrivalInput = document.getElementById('arrivalInput');
+        const departureInput = document.getElementById('departureInput');
+
+        arrivalInput.value = clickedDate;
+        const arriveDate = new Date(clickedDate);
+        const leaveDate = new Date(arriveDate);
+        leaveDate.setDate(arriveDate.getDate() + 1);
+        departureInput.value = leaveDate.toISOString().split("T")[0];
+
+        document.getElementById('overlayBackground').style.display = 'block';
+        document.getElementById('bookingForm').style.display = 'block';
+        calculateEstimatedCost();
+      } else {
+        showToast("This date is already booked.", "error");
+      }
+    }
+
+    function calculateEstimatedCost() {
+      const arrival = new Date(document.getElementById('arrivalInput').value);
+      const departure = new Date(document.getElementById('departureInput').value);
+      const costElement = document.getElementById('estimatedCost');
+
+      if (arrival && departure && departure > arrival) {
+        const nights = Math.round((departure - arrival) / (1000 * 60 * 60 * 24));
+        const cost = nights * 200 + 300;
+        costElement.textContent = `${nights} night${nights > 1 ? 's' : ''} - Estimated $${cost.toLocaleString()}`;
+        costElement.style.display = 'block';
+      } else {
+        costElement.style.display = 'none';
+      }
+    }
+
+    document.getElementById('arrivalInput').addEventListener('change', calculateEstimatedCost);
+    document.getElementById('departureInput').addEventListener('change', calculateEstimatedCost);
+
+    async function submitBooking() {
+      const user = firebase.auth().currentUser;
+      if (!user || !user.email) {
+        showToast("Please log in again to continue.", "error");
+        return;
+      }
+
+      const arrive = document.getElementById('arrivalInput').value;
+      const departure = document.getElementById('departureInput').value;
+      const btn = document.getElementById('submitBtn');
+
+      if (!arrive || !departure) {
+        showToast("Please select both dates.", "error");
+        return;
+      }
+
+      const reqStart = normalizeDateOnly(arrive);
+      const reqEnd = normalizeDateOnly(departure);
+
+      if (!(reqStart < reqEnd)) {
+        showToast("Departure must be after arrival.", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Submitting...";
+
+      try {
+        const q = await db.collection("bookings")
+          .where("arrive date", "<", departure)
+          .get();
+
+        let conflict = null;
+        for (const doc of q.docs) {
+          const b = doc.data();
+          const status = (b.status || "").toLowerCase();
+
+          if (!(status === "approved" || status === "pending")) continue;
+          if (!b["arrive date"] || !b["leave date"]) continue;
+
+          const bStart = normalizeDateOnly(b["arrive date"]);
+          const bEnd = normalizeDateOnly(b["leave date"]);
+
+          if (rangesOverlap(reqStart, reqEnd, bStart, bEnd)) {
+            conflict = { id: doc.id, ...b };
+            break;
+          }
+        }
+
+        if (conflict) {
+          showToast("Those dates overlap with an existing booking.", "error");
+          btn.disabled = false;
+          btn.textContent = "Submit Request";
+          return;
+        }
+      } catch (e) {
+        console.error("Overlap check failed:", e);
+        showToast("Could not verify availability. Try again.", "error");
+        btn.disabled = false;
+        btn.textContent = "Submit Request";
+        return;
+      }
+
+      let name = user.displayName || "N/A";
+      try {
+        const profByEmailId = await db.collection("users").doc(user.email).get();
+        if (profByEmailId.exists) {
+          name = profByEmailId.data().name || name;
+        } else {
+          const q = await db.collection("users").where("email", "==", user.email).limit(1).get();
+          if (!q.empty) name = q.docs[0].data().name || name;
+        }
+      } catch (e) {
+        console.error("Error fetching user profile:", e);
+      }
+
+      try {
+        await db.collection("bookings").add({
+          email: user.email,
+          name: name,
+          "arrive date": arrive,
+          "leave date": departure,
+          status: "pending"
+        });
+
+        bookedDates.push({ start: arrive, end: departure });
+        calendar.addEvent({
+          title: "(Pending) " + (name || user.email),
+          start: arrive,
+          end: departure,
+          allDay: true,
+          backgroundColor: '#94a3b8',
+          textColor: '#fff'
+        });
+
+        showToast("Booking request submitted!", "success");
+        closeForm();
+      } catch (error) {
+        console.error("Error submitting booking:", error);
+        showToast("Failed to submit. Please try again.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit Request";
+      }
+    }
+
+    function closeForm() {
+      document.getElementById('bookingForm').style.display = 'none';
+      document.getElementById('overlayBackground').style.display = 'none';
+    }
+
+    const photoUrls = [
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo1.jpg?alt=media&token=3c0b5557-fd16-4233-bcbf-3138ed6d0d57",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo2.jpg?alt=media&token=c510c171-d4be-4792-adf9-30a150eafd9f",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo3.jpg?alt=media&token=219c0923-e92f-42c4-b6ff-57d11e8768c3",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo4.jpg?alt=media&token=7588f5f1-d1e3-4bdb-82b6-cf33a36eeb32",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo5.jpg?alt=media&token=72b5ce5a-5fcf-4f70-b6b0-f0e71d4de22b",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo6.jpg?alt=media&token=dd577259-8750-4470-b06c-129d3530079b",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/HouseMap1.webp?alt=media&token=d73ffe5e-af32-476a-b546-eed590571909",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/HouseMap2.webp?alt=media&token=d7a0b6bd-225c-4b52-811f-d229832219eb"
+    ];
+    let currentIndex = 0;
+
+    function updateGallery() {
+      document.getElementById("galleryImg").src = photoUrls[currentIndex];
+      document.getElementById("photoCounter").textContent = `${currentIndex + 1} of ${photoUrls.length}`;
+    }
+
+    function openGallery() {
+      currentIndex = 0;
+      updateGallery();
+      document.getElementById("photoModal").style.display = "flex";
+    }
+
+    function closeGallery() {
+      document.getElementById("photoModal").style.display = "none";
+    }
+
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % photoUrls.length;
+      updateGallery();
+    }
+
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + photoUrls.length) % photoUrls.length;
+      updateGallery();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById("photoModal").style.display === "flex") {
+        if (e.key === "ArrowRight") nextImage();
+        if (e.key === "ArrowLeft") prevImage();
+        if (e.key === "Escape") closeGallery();
+      }
+    });
+  </script>
+</body>
+</html>

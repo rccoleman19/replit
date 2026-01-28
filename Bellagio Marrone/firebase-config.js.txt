@@ -1,0 +1,18 @@
+// firebase-config.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAiZafQYL0jm0mGL-aWlN1Bt6gQ0ifXwoM",
+  authDomain: "bellagio-marrone.firebaseapp.com",
+  projectId: "bellagio-marrone",
+  storageBucket: "bellagio-marrone.firebasestorage.app",
+  messagingSenderId: "954154601522",
+  appId: "1:954154601522:web:fee9d120c4e42c540e802b",
+  measurementId: "G-0PZFF25CZ2"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);

@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beach House Calendar</title>
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: url('backgroundimage.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+    }
+    #calendar-container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 10px;
+      background: rgba(255, 255, 255, 0.8); /* 0.9 = 90% opaque */
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #logout {
+      display: block;
+      width: 120px;
+      margin: 20px auto;
+      padding: 10px;
+      text-align: center;
+      background: #dc3545;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    #logout:hover { background: #c82333; }
+    .fc-event-title {
+      font-size: 1.2em;
+      font-weight: bold;
+      padding: 2px;
+    }
+    .shadow-black .fc-event-title { text-shadow: 0 0 4px black; }
+    .shadow-white .fc-event-title { text-shadow: 0 0 4px white; }
+
+    #bookingForm {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    #bookingForm input, #bookingForm button {
+      display: block;
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    #overlayBackground {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    /* Address / Directions Panel */
+#addressPanel {
+  display: none;
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1002;
+  width: clamp(320px, 90vw, 520px);
+}
+
+#addressPanel .close {
+  position: absolute; top: 10px; right: 16px;
+  font-size: 28px; color: #000; cursor: pointer;
+}
+
+.addr-content { font-family: Arial, sans-serif; }
+
+.addr-links {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.addr-links a {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  text-decoration: none;
+  color: #111827;
+  font-weight: 600;
+  font-size: 14px;
+}
+.addr-links a:hover { background: #e5e7eb; }
+
+.map-embed {
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid #e5e7eb;
+  height: 260px;
+}
+#mapFrame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+/* Center title + address text in the Address panel */
+#addressPanel h3,
+#addressPanel #addressText {
+  text-align: center;
+}
+
+    /* Modal Image Gallery */
+    #photoModal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0; top: 0;
+      width: 100vw; height: 100vh;
+      background-color: rgba(0,0,0,0.9);
+      justify-content: center; align-items: center;
+      flex-direction: column;
+    }
+    .modal-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 80%;
+      text-align: center;
+    }
+    .modal-content img {
+      width: auto; max-width: 100%; max-height: 80vh; border-radius: 10px;
+    }
+    .controls { margin-top: 10px; }
+    .controls button {
+      background: #fff; color: #000; padding: 8px 14px; margin: 0 8px; border: none; font-size: 18px; cursor: pointer;
+    }
+    .close {
+      position: absolute; top: 30px; right: 50px; font-size: 40px; color: #fff; cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      #calendar-container { width: 95%; margin: 20px auto; padding: 0 5px; }
+      .fc-event-title { font-size: 1.4em; }
+      #logout { width: 90%; font-size: 1.2em; margin: 15px auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="overlayBackground"></div>
+
+  <!-- House Pictures Modal -->
+  <div id="photoModal" class="modal">
+    <span class="close" onclick="closeGallery()">×</span>
+    <div class="modal-content">
+      <img id="galleryImg" src="" />
+      <div class="controls">
+        <button onclick="prevImage()">⬅</button>
+        <button onclick="nextImage()">➡</button>
+      </div>
+    </div>
+  </div>
+  <!-- Address / Directions Panel -->
+  <div id="addressPanel">
+    <span class="close" onclick="closeAddressPanel()">×</span>
+    <div class="addr-content">
+      <h3 style="margin: 0 0 8px 0;">Beach House Address</h3>
+      <p id="addressText" style="margin: 0 0 12px 0;"></p>
+
+      <div class="addr-links">
+        <a id="appleMapsLink"  target="_blank" rel="noopener">Open in Apple Maps</a>
+        <a id="googleMapsLink" target="_blank" rel="noopener">Open in Google Maps</a>
+        <a id="wazeLink"       target="_blank" rel="noopener">Open in Waze</a>
+     </div>
+
+      <div class="map-embed">
+  <!-- Google Maps Embed (reliable) -->
+  <iframe
+    id="mapFrame"
+    allowfullscreen
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade">
+  </iframe>
+</div>
+
+    </div>
+  </div>
+  <!-- Booking Form -->
+  <div id="bookingForm">
+    <div style="max-width: 200px; margin: 0 auto; text-align: center;">
+      <label for="arrivalInput">Arrival Date</label>
+      <input id="arrivalInput" type="date" required style="width: 100%; margin-bottom: 10px;">
+    </div>
+    <div style="max-width: 200px; margin: 0 auto; text-align: center;">
+      <label for="departureInput">Leave Date</label>
+      <input id="departureInput" type="date" required style="width: 100%; margin-bottom: 10px;">
+    </div>
+    <p id="estimatedCost" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
+    <div style="text-align: center;">
+      <button onclick="submitBooking()">Submit Booking</button>
+      <button onclick="closeForm()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Calendar and Logout -->
+  <div id="calendar-container">
+    <div id="calendar"></div>
+    <a href="#" id="logout" onclick="logout()">Logout</a>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiZafQYL0jm0mGL-aWlN1Bt6gQ0ifXwoM",
+      authDomain: "bellagio-marrone.firebaseapp.com",
+      projectId: "bellagio-marrone",
+      storageBucket: "bellagio-marrone.appspot.com",
+      messagingSenderId: "954154601522",
+      appId: "1:954154601522:web:fee9d120c4e42c540e802b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let calendar, bookedDates = []; // each as {start: "YYYY-MM-DD", end: "YYYY-MM-DD"} with end-exclusive
+    /* ===== Address / Directions config =====
+   TODO: Replace with your real address and (optionally) lat/long
+*/
+const HOUSE_ADDRESS = "43 Golf Villa Dr., Santa Rosa Beach, FL 32459";
+const HOUSE_COORDS  = { lat: 30.3749, lng: -86.1616 }; // optional but improves Waze link
+
+function encode(u) { return encodeURIComponent(u); }
+
+function buildDirectionsLinks() {
+  // Apple Maps (destination)
+  const apple  = `https://maps.apple.com/?daddr=${encode(HOUSE_ADDRESS)}`;
+  // Google Maps
+  const google = `https://www.google.com/maps/dir/?api=1&destination=${encode(HOUSE_ADDRESS)}`;
+  // Waze (prefer coords if provided)
+  const waze   = (HOUSE_COORDS && typeof HOUSE_COORDS.lat === "number")
+    ? `https://www.waze.com/ul?ll=${HOUSE_COORDS.lat}%2C${HOUSE_COORDS.lng}&navigate=yes`
+    : `https://www.waze.com/ul?q=${encode(HOUSE_ADDRESS)}&navigate=yes`;
+  return { apple, google, waze };
+}
+
+function openAddressPanel() {
+  // Fill in text + links
+  document.getElementById("addressText").textContent = HOUSE_ADDRESS;
+  const links = buildDirectionsLinks();
+  document.getElementById("appleMapsLink").href  = links.apple;
+  document.getElementById("googleMapsLink").href = links.google;
+  document.getElementById("wazeLink").href       = links.waze;
+
+  // Google Maps embed preview (no API key required)
+  const gEmbed = `https://maps.google.com/maps?q=${encodeURIComponent(HOUSE_ADDRESS)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+  document.getElementById("mapFrame").src = gEmbed;
+
+  // Show with overlay
+  document.getElementById('overlayBackground').style.display = 'block';
+  document.getElementById('addressPanel').style.display = 'block';
+}
+
+function closeAddressPanel() {
+  document.getElementById('addressPanel').style.display = 'none';
+  document.getElementById('overlayBackground').style.display = 'none';
+  const iframe = document.getElementById("mapFrame");
+  if (iframe) iframe.src = ""; // release iframe
+}
+
+    function logout() {
+      auth.signOut().then(() => window.location.href = "index.html");
+    }
+
+    function getContrastTextColor(hexColor) {
+      const r = parseInt(hexColor.substr(1, 2), 16);
+      const g = parseInt(hexColor.substr(3, 2), 16);
+      const b = parseInt(hexColor.substr(5, 2), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 125 ? '#000' : '#fff';
+    }
+
+    /* ===== Helpers for end-exclusive range logic (NEW) ===== */
+    function normalizeDateOnly(dateStr) {
+      // Accepts "YYYY-MM-DD" or Date; returns Date at local midnight
+      const d = (dateStr instanceof Date) ? new Date(dateStr) : new Date(dateStr + "T00:00:00");
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    // [aStart,aEnd) overlaps [bStart,bEnd) if aStart < bEnd && aEnd > bStart
+    function rangesOverlap(aStart, aEnd, bStart, bEnd) {
+      return aStart < bEnd && aEnd > bStart;
+    }
+    /* ======================================================= */
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const calendarEl = document.getElementById('calendar');
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'addressButton housePicturesButton'
+        },
+        customButtons: {
+  addressButton: {
+    text: 'Address',
+    click: function () { openAddressPanel(); }
+  },
+  housePicturesButton: {
+    text: 'Photos',
+    click: function () { openGallery(); }
+  }
+},
+
+        height: 650,
+        dateClick: handleDateClick
+      });
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        try {
+          const snapshot = await db.collection("bookings").where("status", "==", "approved").get();
+          const events = [];
+
+          for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const email = data.email || "";
+
+            // Prefer name on booking; fallback to users lookup; then email; then "Booking"
+            let userName = (data.name && data.name !== "N/A") ? data.name : "";
+            if (!userName && email) {
+              try {
+                const userSnapshot = await db.collection("users").where("email", "==", email).limit(1).get();
+                if (!userSnapshot.empty) userName = userSnapshot.docs[0].data().name || "";
+              } catch (e) { console.error("Failed to fetch name for", email, e); }
+            }
+            if (!userName) userName = email || "Booking";
+
+            // Track booked ranges as [start,end) (end-exclusive)
+            if (data['arrive date'] && data['leave date']) {
+              bookedDates.push({ start: data['arrive date'], end: data['leave date'] });
+            }
+
+            // FullCalendar treats allDay `end` as exclusive; we can pass leave date directly
+            const color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            const textColor = getContrastTextColor(color);
+            const shadowClass = textColor === "#000" ? "shadow-white" : "shadow-black";
+
+            events.push({
+              title: userName,
+              start: data['arrive date'],
+              end: data['leave date'],      // end-exclusive -> no bar on departure day
+              backgroundColor: color,
+              textColor: textColor,
+              allDay: true,
+              classNames: [shadowClass],
+            });
+          }
+
+          calendar.addEventSource(events);
+          calendar.render();
+
+        } catch (error) {
+          console.error("Error loading bookings:", error);
+          alert("Could not load bookings from Firestore.");
+        }
+      });
+
+    });
+
+    function handleDateClick(info) {
+      const clickedDate = info.dateStr;
+      // Treat ranges as [start,end) → include start, exclude end
+      const isBooked = bookedDates.some(range =>
+        clickedDate >= range.start && clickedDate < range.end  // NOTE: '<' end
+      );
+
+      if (!isBooked) {
+        const arrivalInput = document.getElementById('arrivalInput');
+        const departureInput = document.getElementById('departureInput');
+
+        arrivalInput.value = clickedDate;
+        const arriveDate = new Date(clickedDate);
+        const leaveDate = new Date(arriveDate);
+        leaveDate.setDate(arriveDate.getDate() + 1);
+        departureInput.value = leaveDate.toISOString().split("T")[0];
+
+        document.getElementById('overlayBackground').style.display = 'block';
+        document.getElementById('bookingForm').style.display = 'block';
+        calculateEstimatedCost();
+      } else {
+        alert("This date is already booked.");
+      }
+    }
+
+    function calculateEstimatedCost() {
+      const arrival = new Date(document.getElementById('arrivalInput').value);
+      const departure = new Date(document.getElementById('departureInput').value);
+      const costElement = document.getElementById('estimatedCost');
+
+      if (arrival && departure && departure > arrival) {
+        const nights = Math.round((departure - arrival) / (1000 * 60 * 60 * 24));
+        const cost = nights * 200 + 300;
+        costElement.textContent = `Estimated Cost: $${cost}`;
+      } else {
+        costElement.textContent = "";
+      }
+    }
+
+    document.getElementById('departureInput').addEventListener('change', calculateEstimatedCost);
+
+    // ========= Updated submit with preflight overlap + robust name lookup =========
+    async function submitBooking() {
+      const user = firebase.auth().currentUser;
+      if (!user || !user.email) {
+        alert("User not authenticated. Please log in again.");
+        return;
+      }
+
+      const arrive = document.getElementById('arrivalInput').value;     // "YYYY-MM-DD"
+      const departure = document.getElementById('departureInput').value;
+
+      if (!arrive || !departure) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      const reqStart = normalizeDateOnly(arrive);
+      const reqEnd   = normalizeDateOnly(departure); // end-exclusive
+
+      if (!(reqStart < reqEnd)) {
+        alert("Choose valid dates. Leave must be after arrive.");
+        return;
+      }
+
+      // ---- Firestore preflight overlap (approved + pending) ----
+// Use ONE inequality query, then filter status on the client to avoid composite index requirement.
+try {
+  const q = await db.collection("bookings")
+    .where("arrive date", "<", departure) // candidates that start before requested leave
+    .get();
+
+  let conflict = null;
+  for (const doc of q.docs) {
+    const b = doc.data();
+    const status = (b.status || "").toLowerCase();
+
+    // only consider approved + pending
+    if (!(status === "approved" || status === "pending")) continue;
+    if (!b["arrive date"] || !b["leave date"]) continue;
+
+    const bStart = normalizeDateOnly(b["arrive date"]);
+    const bEnd   = normalizeDateOnly(b["leave date"]); // end-exclusive
+
+    if (rangesOverlap(reqStart, reqEnd, bStart, bEnd)) {
+      conflict = { id: doc.id, ...b };
+      break;
+    }
+  }
+
+  if (conflict) {
+    alert(`Those nights are already booked by ${conflict.name || conflict.email || "someone"}. Try different dates.`);
+    return;
+  }
+} catch (e) {
+  console.error("Overlap check failed:", e);
+  alert("Could not verify availability. Please try again.");
+  return;
+}
+
+
+      // ---- Get user's name from the `users` collection (by email), with fallbacks ----
+      let name = user.displayName || "N/A";
+      try {
+        // Primary: profile doc keyed by email
+        const profByEmailId = await db.collection("users").doc(user.email).get();
+        if (profByEmailId.exists) {
+          name = profByEmailId.data().name || name;
+        } else {
+          // Fallback: query by email field in case of older records
+          const q = await db.collection("users").where("email", "==", user.email).limit(1).get();
+          if (!q.empty) name = q.docs[0].data().name || name;
+        }
+      } catch (e) {
+        console.error("Error fetching user profile:", e);
+      }
+
+      // ---- Create pending booking ----
+      try {
+        await db.collection("bookings").add({
+          email: user.email,
+          name: name,
+          "arrive date": arrive,
+          "leave date": departure,  // end-exclusive
+          status: "pending"
+        });
+
+        // Optional: immediately block locally and show pending bar so user sees it
+        bookedDates.push({ start: arrive, end: departure });
+        calendar.addEvent({
+          title: "(Pending) " + (name || user.email),
+          start: arrive,
+          end: departure,     // end-exclusive
+          allDay: true
+        });
+
+        alert("Booking request submitted!");
+        closeForm();
+      } catch (error) {
+        console.error("Error submitting booking:", error);
+        alert("Failed to submit booking.");
+      }
+    }
+    // =========================================================================
+
+    function closeForm() {
+      document.getElementById('bookingForm').style.display = 'none';
+      document.getElementById('overlayBackground').style.display = 'none';
+    }
+
+    // Photo Gallery Logic
+    const photoUrls = [
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo1.jpg?alt=media&token=3c0b5557-fd16-4233-bcbf-3138ed6d0d57",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo2.jpg?alt=media&token=c510c171-d4be-4792-adf9-30a150eafd9f",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo3.jpg?alt=media&token=219c0923-e92f-42c4-b6ff-57d11e8768c3",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo4.jpg?alt=media&token=7588f5f1-d1e3-4bdb-82b6-cf33a36eeb32",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo5.jpg?alt=media&token=72b5ce5a-5fcf-4f70-b6b0-f0e71d4de22b",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/photo6.jpg?alt=media&token=dd577259-8750-4470-b06c-129d3530079b",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/HouseMap1.webp?alt=media&token=d73ffe5e-af32-476a-b546-eed590571909",
+      "https://firebasestorage.googleapis.com/v0/b/bellagio-marrone.firebasestorage.app/o/HouseMap2.webp?alt=media&token=d7a0b6bd-225c-4b52-811f-d229832219eb"
+    ];
+    let currentIndex = 0;
+
+    function openGallery() {
+      currentIndex = 0;
+      document.getElementById("galleryImg").src = photoUrls[currentIndex];
+      document.getElementById("photoModal").style.display = "flex";
+    }
+
+    function closeGallery() { document.getElementById("photoModal").style.display = "none"; }
+
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % photoUrls.length;
+      document.getElementById("galleryImg").src = photoUrls[currentIndex];
+    }
+
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + photoUrls.length) % photoUrls.length;
+      document.getElementById("galleryImg").src = photoUrls[currentIndex];
+    }
+  </script>
+</body>
+</html>

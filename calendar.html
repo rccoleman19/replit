@@ -81,22 +81,6 @@
         font-weight: 700;
         color: #1a1a2e;
       }
-      #logout {
-        display: inline-block;
-        padding: 5px 12px;
-        text-align: center;
-        background: #ef4444;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 12px;
-        transition: all 0.2s ease;
-      }
-      #logout:hover {
-        background: #dc2626;
-      }
-
       .fc {
         font-family: inherit;
       }
@@ -521,7 +505,6 @@
     <div id="calendar-container">
       <div class="header-bar">
         <h1>Beach House Calendar</h1>
-        <a href="#" id="logout" onclick="logout(); return false;">Sign Out</a>
       </div>
       <div id="calendar"></div>
     </div>
@@ -599,9 +582,6 @@
         closeForm();
       }
 
-      function logout() {
-        auth.signOut().then(() => (window.location.href = "index.html"));
-      }
 
       function getContrastTextColor(hexColor) {
         const r = parseInt(hexColor.substr(1, 2), 16);
